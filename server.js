@@ -18,15 +18,27 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// --- CORS CONFIG (IMPORTANT FOR RENDER + COOKIES) ---
-app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
-  credentials: true,
-}));
+// --- FIXED CORS CONFIG ---
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://frontend-pasovit.vercel.app"
+];
 
-// --- SECURITY HEADERS (prevents CORS blocking cookies) ---
-app.set("trust proxy", 1); 
-// Required for secure cookies behind reverse proxies (Render)
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("CORS Not Allowed"));
+    },
+    credentials: true,
+  })
+);
+
+// Required for secure cookies behind Render
+app.set("trust proxy", 1);
 
 // Routes
 app.use('/api/auth', authRoutes);
